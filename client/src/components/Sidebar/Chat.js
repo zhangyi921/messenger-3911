@@ -4,6 +4,7 @@ import { BadgeAvatar, ChatContent } from "../Sidebar";
 import { makeStyles } from "@material-ui/core/styles";
 import { setActiveChat } from "../../store/activeConversation";
 import { connect } from "react-redux";
+import { resetUnreadMessage } from "../../store/utils/thunkCreators";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -30,6 +31,21 @@ const Chat = (props) => {
 
   const handleClick = async (conversation) => {
     await props.setActiveChat(conversation.otherUser.username);
+    // if there are unread messages, set them as read
+    if (conversation.unreadMsgCount > 0){
+      // find the last unread message
+      let lastUnreadMsgId = 0
+      for (const message of conversation.messages){
+        if (message.senderId === conversation.otherUser.id){
+          lastUnreadMsgId = message.id
+        }
+      }
+      await props.resetUnreadMessage({
+        conversationId: conversation.id, 
+        senderId: conversation.otherUser.id,
+        messageId: lastUnreadMsgId,
+      })
+    }
   };
 
   const renderUnreadCountChip = () => {
@@ -57,6 +73,9 @@ const mapDispatchToProps = (dispatch) => {
   return {
     setActiveChat: (id) => {
       dispatch(setActiveChat(id));
+    },
+    resetUnreadMessage: (conversationId) => {
+      dispatch(resetUnreadMessage(conversationId))
     }
   };
 };

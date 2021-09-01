@@ -1,9 +1,8 @@
-import store from '../index'
+
 
 export const addMessageToStore = (state, payload) => {
   const { message, sender } = payload;
   // if sender isn't null, that means the message needs to be put in a brand new convo
-  debugger
   if (sender !== null) {
     const newConvo = {
       id: message.conversationId,
@@ -17,15 +16,23 @@ export const addMessageToStore = (state, payload) => {
 
   return state.map((convo) => {
     if (convo.id === message.conversationId) {
+      // increament unReadMsgCount if the msg is from other user
       if (message.senderId === convo.otherUser.id){
-        let activeConversation = store.getState().activeConversation
-        // inactive chat, increament unReadMsgCount
-        if (activeConversation !== convo.otherUser.username){
+        // increament unReadMsgCount if this is inactive chat
+        if (payload.activeConversation !== convo.otherUser.username){
           return {
             ...convo,
             messages: [...convo.messages, message],
             latestMessageText: message.text,
             unreadMsgCount: convo.unreadMsgCount + 1,
+          };
+        }else {
+          // this is active chat
+          return {
+            ...convo,
+            messages: [...convo.messages, message],
+            latestMessageText: message.text,
+            unreadMsgCount: 0
           };
         }
       }
@@ -100,32 +107,86 @@ export const addNewConvoToStore = (state, recipientId, message) => {
 };
 
 export const loadConvosToStore = (state, conversations) => {
-  const convosCopy = [...conversations]
-
-  // find last read messages & count of unread messages
-  for (const convo of convosCopy){
+  // find last my read messages & count of unread messages from other user
+  for (const convo of conversations){
     let unreadMsgCount = 0
     for (let i = 0; i< convo.messages.length; i++){
       const currentMessage = convo.messages[i]
-      const nextMessage = convo.messages[i+1]
-      let isLastReadMessage
-      if (nextMessage === undefined){
-        // this is the last msg
-        isLastReadMessage = currentMessage.readByRecipient
+      if (currentMessage.senderId === convo.otherUser.id){
+        // other user's message
+        if (!currentMessage.readByRecipient){
+          unreadMsgCount += 1
+        }
       }else {
-        // last read msg if current msg is read and next msg is unread
-        isLastReadMessage = currentMessage.readByRecipient && !nextMessage.readByRecipient
-      }
-      const isMyMessage = currentMessage.senderId !== convo.otherUser.id
-      if (isMyMessage && isLastReadMessage){
-        currentMessage.isLastReadMessage = true
-      }
-      if (!isMyMessage && !currentMessage.readByRecipient){
-        unreadMsgCount += 1
+        // current message is my message
+        // try find my next message
+        let nextMessage = null
+        for (let j = i + 1; j < convo.messages.length; j++){
+          const msg = convo.messages[j]
+          if (msg.senderId !== convo.otherUser.id){
+            nextMessage = msg
+            break
+          }
+        }
+        let isLastReadMessage
+        if (nextMessage === null){
+          // this is my last msg
+          isLastReadMessage = currentMessage.readByRecipient
+        }else {
+          // last read msg if current msg is read and next msg is unread
+          isLastReadMessage = currentMessage.readByRecipient && !nextMessage.readByRecipient
+        }
+        currentMessage.isLastReadMessage = isLastReadMessage
       }
     }
     convo.unreadMsgCount = unreadMsgCount
   }
-  return convosCopy
+  return conversations
 };
 
+export const resetUnreadMsgCount = (state, payload) => {
+  return state.map((convo) => {
+    if (convo.id === payload.convoId) {
+
+      return {
+        ...convo,
+        messages: convo.messages.map(msg => {
+          if (msg.senderId === convo.otherUser.id){
+            return {
+              ...msg,
+              readByRecipient: true,
+              isLastReadMessage: false,
+            }
+          }
+          return msg
+        }),
+        unreadMsgCount: 0
+      };
+    }
+    return convo;
+  });
+}
+
+export const setMessageRead = (state, payload) => {
+  return state.map((convo) => {
+    if (convo.id === payload.conversationId) {
+      return {
+        ...convo,
+        messages: convo.messages.map(msg => {
+          if (msg.id === payload.messageId){
+            return {
+              ...msg,
+              readByRecipient: true,
+              isLastReadMessage: true
+            }
+          }
+          return {
+            ...msg,
+            isLastReadMessage: false
+          }
+        }),
+      };
+    }
+    return convo;
+  });
+}
