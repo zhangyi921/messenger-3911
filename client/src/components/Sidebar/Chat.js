@@ -18,10 +18,6 @@ const useStyles = makeStyles((theme) => ({
       cursor: "grab"
     }
   },
-  unreadChip: {
-    background: "#3A8DFF",
-    color: 'white',
-  },
 }));
 
 const Chat = (props) => {
@@ -50,7 +46,7 @@ const Chat = (props) => {
 
   const renderUnreadCountChip = () => {
     if (conversation.unreadMsgCount > 0){
-      return <Chip label={conversation.unreadMsgCount} size="small" color="#3a8dff" className={classes.unreadChip}/>
+      return <Box fontWeight="fontWeightBold"><Chip label={conversation.unreadMsgCount} size="small" color="primary" /></Box>
     }
     return null
   }

@@ -4,7 +4,6 @@ import {
   addSearchedUsersToStore,
   removeOfflineUserFromStore,
   addMessageToStore,
-  loadConvosToStore,
   resetUnreadMsgCount,
   setMessageRead,
 } from "./utils/reducerFunctions";
@@ -91,7 +90,7 @@ export const markMsgAsRead = (payload) => {
 const reducer = (state = [], action) => {
   switch (action.type) {
     case GET_CONVERSATIONS:
-      return loadConvosToStore(state, action.conversations);
+      return action.conversations;
     case SET_MESSAGE:
       return addMessageToStore(state, action.payload);
     case ADD_ONLINE_USER: {

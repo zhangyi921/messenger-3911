@@ -106,44 +106,6 @@ export const addNewConvoToStore = (state, recipientId, message) => {
   });
 };
 
-export const loadConvosToStore = (state, conversations) => {
-  // find last my read messages & count of unread messages from other user
-  for (const convo of conversations){
-    let unreadMsgCount = 0
-    for (let i = 0; i< convo.messages.length; i++){
-      const currentMessage = convo.messages[i]
-      if (currentMessage.senderId === convo.otherUser.id){
-        // other user's message
-        if (!currentMessage.readByRecipient){
-          unreadMsgCount += 1
-        }
-      }else {
-        // current message is my message
-        // try find my next message
-        let nextMessage = null
-        for (let j = i + 1; j < convo.messages.length; j++){
-          const msg = convo.messages[j]
-          if (msg.senderId !== convo.otherUser.id){
-            nextMessage = msg
-            break
-          }
-        }
-        let isLastReadMessage
-        if (nextMessage === null){
-          // this is my last msg
-          isLastReadMessage = currentMessage.readByRecipient
-        }else {
-          // last read msg if current msg is read and next msg is unread
-          isLastReadMessage = currentMessage.readByRecipient && !nextMessage.readByRecipient
-        }
-        currentMessage.isLastReadMessage = isLastReadMessage
-      }
-    }
-    convo.unreadMsgCount = unreadMsgCount
-  }
-  return conversations
-};
-
 export const resetUnreadMsgCount = (state, payload) => {
   return state.map((convo) => {
     if (convo.id === payload.convoId) {
@@ -172,19 +134,7 @@ export const setMessageRead = (state, payload) => {
     if (convo.id === payload.conversationId) {
       return {
         ...convo,
-        messages: convo.messages.map(msg => {
-          if (msg.id === payload.messageId){
-            return {
-              ...msg,
-              readByRecipient: true,
-              isLastReadMessage: true
-            }
-          }
-          return {
-            ...msg,
-            isLastReadMessage: false
-          }
-        }),
+        lastReadMsgId: payload.messageId
       };
     }
     return convo;

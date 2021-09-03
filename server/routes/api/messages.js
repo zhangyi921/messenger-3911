@@ -50,6 +50,11 @@ router.post("/read", async (req, res, next) => {
     if (!req.user) {
       return res.sendStatus(401);
     }
+    const convo = await Conversation.findOne({where: {id: req.body.conversationId}})
+    // make sure user can only update the conversation belongs to this user
+    if (convo.user1Id !== req.user.id && convo.user2Id !== req.user.id){
+      return res.sendStatus(401);
+    }
     await Message.update({ readByRecipient: true }, {
       where: {
         conversationId: req.body.conversationId,
@@ -57,7 +62,7 @@ router.post("/read", async (req, res, next) => {
         id: {[Op.lte]: req.body.messageId}
       }
     });
-    return res.json({});
+    return res.sendStatus(204);
   } catch (error) {
     next(error);
   }

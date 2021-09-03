@@ -28,7 +28,6 @@ const useStyles = makeStyles(() => ({
   avatar: {
     height: 15,
     width: 15,
-    marginTop: 6
   },
 }));
 
@@ -37,7 +36,11 @@ const SenderBubble = (props) => {
   const { time, text, otherUser, isLastReadMessage } = props;
   const renderReadAvatar = () => {
     if (isLastReadMessage){
-      return <Avatar alt={otherUser.username} src={otherUser.photoUrl} className={classes.avatar}></Avatar>
+      return (
+      <Box pt={1}>
+        <Avatar alt={otherUser.username} src={otherUser.photoUrl} className={classes.avatar}></Avatar>
+      </Box>
+      )
     }
     return null
   }
