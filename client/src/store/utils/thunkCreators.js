@@ -5,6 +5,7 @@ import {
   addConversation,
   setNewMessage,
   setSearchedUsers,
+  resetUnreadCount,
 } from "../conversations";
 import { gotUser, setFetchingStatus } from "../user";
 
@@ -103,6 +104,17 @@ export const postMessage = (body) => async (dispatch) => {
     }
 
     sendMessage(data, body);
+  } catch (error) {
+    console.error(error);
+  }
+};
+
+// message format to send: {conversationId, senderId, messageId}
+export const resetUnreadMessage = (body) => async (dispatch) => {
+  try {
+    await axios.post("/api/messages/read", body);
+    socket.emit("message-read", body);
+    dispatch(resetUnreadCount(body.conversationId))
   } catch (error) {
     console.error(error);
   }

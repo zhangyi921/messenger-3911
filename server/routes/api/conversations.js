@@ -19,7 +19,12 @@ router.get("/", async (req, res, next) => {
           user2Id: userId,
         },
       },
-      attributes: ["id", [Sequelize.literal('(SELECT max(messages."createdAt") FROM messages WHERE messages."conversationId" = conversation.id)'), 'recentmessagedate']],
+      attributes: [
+        "id", 
+        [Sequelize.literal('(SELECT max(messages."createdAt") FROM messages WHERE messages."conversationId" = conversation.id)'), 'recentmessagedate'],
+        [Sequelize.literal(`(SELECT count(*) FROM messages WHERE messages."conversationId" = conversation.id and messages."readByRecipient" = false and messages."senderId"!=${req.user.id})`), 'unreadMsgCount'],
+        [Sequelize.literal(`(SELECT messages."id" FROM messages WHERE messages."conversationId" = conversation.id and messages."readByRecipient" = true and messages."senderId"=${req.user.id} order by messages."id" DESC limit 1)`), 'lastReadMsgId'],
+      ],
       order: [[Sequelize.literal("recentmessagedate"), "DESC"], [Message, "createdAt", "ASC"]],
       include: [
         { model: Message, order: ["createdAt", "DESC"] },
